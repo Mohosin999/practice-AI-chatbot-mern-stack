@@ -4,7 +4,6 @@
 
 - [Description](#-description)
 - [Live Demo](#-live-demo)
-- [API Documentation with Swagger](#-api-documentation-with-swagger)
 - [Features](#-features)
 - [Tech Stack](#️-tech-stack)
 - [Setup and Installation](#️-setup-and-installation)
@@ -20,10 +19,6 @@ The platform is protected by a strong authentication system, ensuring that only 
 ## 🚀 Live Demo
 
 [![Project Screenshot](./frontend/public/readme_file_img.png)](https://github.com/Mohosin999/)
-
-## 🔍 API Documentation with Swagger
-
-Explore the full API documentation here: https://smartgpt-server.onrender.com/docs
 
 ## ✨ Features
 
