@@ -19,7 +19,7 @@ The platform is protected by a strong authentication system, ensuring that only 
 
 ## 🚀 Live Demo
 
-[![Project Screenshot](./frontend/public/readme_file_img.png)]
+[![Project Screenshot](./frontend/public/readme_file_img.png)](https://github.com/Mohosin999/)
 
 ## 🔍 API Documentation with Swagger
 
