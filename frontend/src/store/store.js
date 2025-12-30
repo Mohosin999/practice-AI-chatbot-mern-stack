@@ -3,18 +3,20 @@ import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import authReducer from "../features/auth/authSlice";
 import chatReducer from "../features/chat/chatSlice";
+import userReducer from "../features/user/userSlice";
 
 // Combine reducers
 const rootReducer = combineReducers({
   auth: authReducer,
   chat: chatReducer,
+  user: userReducer,
 });
 
 // Persist config
 const persistConfig = {
   key: "root",
   storage, // use localStorage
-  whitelist: ["auth", "chat"],
+  whitelist: ["auth", "chat", "user"],
 };
 
 // Create persisted reducer

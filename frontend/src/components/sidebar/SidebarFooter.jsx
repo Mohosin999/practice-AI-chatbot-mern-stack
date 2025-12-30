@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchMe } from "@/features/user/userSlice";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -18,9 +20,18 @@ import { Switch } from "../ui/switch";
 
 const SidebarFooter = ({ token, onLogout, onLogin }) => {
   const [alertOpen, setAlertOpen] = useState(false);
+  const dispatch = useDispatch();
+
+  const { profile, loading } = useSelector((state) => state.user);
 
   // Theme state
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+
+  useEffect(() => {
+    if (token && !profile) {
+      dispatch(fetchMe());
+    }
+  }, [token, profile, dispatch]);
 
   useEffect(() => {
     if (theme === "dark") {
@@ -39,15 +50,7 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
     <div className="flex flex-col gap-2 border-t border-gray-700">
       {/* Theme switch */}
       <div className="flex items-center justify-between mt-2 p-2 bg-gray-800 dark:bg-gray-700 rounded-lg shadow-sm transition-colors duration-300">
-        <span
-          className="text-sm font-semibold text-[#48A4FF] transition-all duration-300 ease-in-out transform"
-          style={{
-            transitionProperty: "opacity, transform",
-            opacity: theme === "light" ? 1 : 1,
-            transform:
-              theme === "light" ? "translateY(0px)" : "translateY(0px)",
-          }}
-        >
+        <span className="text-sm font-semibold text-[#48A4FF]">
           {theme === "light" ? "Dark Theme" : "Light Theme"}
         </span>
         <Switch
@@ -57,21 +60,22 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
         />
       </div>
 
-      {/* Divider */}
       <div className="border-t border-gray-700 mb-2"></div>
 
       {token ? (
-        // Logged-in view
         <div className="border-gray-700 flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Avatar className="w-10 h-10">
-              <AvatarImage src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_LnhwLXP1Ue8GYWenpakaD7tOQH-kjtRUSA&s" />
-              <AvatarFallback>CN</AvatarFallback>
+              <AvatarImage src={profile?.avatar || "github.com"} />
+              <AvatarFallback className="text-gray-900 bg-white">
+                {profile?.name?.charAt(0) || "U"}
+              </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <h2>Demo User</h2>
+              <h2 className="text-sm font-medium text-white truncate max-w-[120px]">
+                {loading ? "Loading..." : profile?.name || "User"}
+              </h2>
 
-              {/* Logout Confirmation Dialog */}
               <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
                 <AlertDialogTrigger asChild>
                   <button
@@ -79,7 +83,7 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
                       e.stopPropagation();
                       setAlertOpen(true);
                     }}
-                    className="text-xs text-start text-gray-300 cursor-pointer active:scale-105 select-none flex items-center gap-1"
+                    className="text-xs text-start text-gray-400 hover:text-red-400 cursor-pointer transition-colors flex items-center gap-1"
                   >
                     <LogOut size={14} /> Logout
                   </button>
@@ -97,7 +101,7 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
                   </AlertDialogHeader>
 
                   <div className="flex justify-end gap-2 mt-4">
-                    <AlertDialogCancel className="px-3 py-1 rounded border text-sm cursor-pointer select-none active:scale-105">
+                    <AlertDialogCancel className="px-3 py-1 rounded border text-sm cursor-pointer">
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -105,7 +109,7 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
                         onLogout();
                         setAlertOpen(false);
                       }}
-                      className="bg-red-600 text-white px-3 py-1 rounded text-sm cursor-pointer select-none active:scale-105"
+                      className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm cursor-pointer"
                     >
                       Logout
                     </AlertDialogAction>
@@ -116,7 +120,6 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
           </div>
         </div>
       ) : (
-        // Logged-out view
         <Button
           variant="outline"
           onClick={onLogin}
