@@ -1,40 +1,38 @@
 const Chat = require("../../model/Chat");
-const openai = require("../../config/openai");
+const genAI = require("../../config/gemini");
 const { notFound } = require("../../utils/error");
 
 const createMessage = async ({ userId, chatId, prompt }) => {
-  // Find the chat by user and chat ID
+  // Find chat
   const chat = await Chat.findOne({ userId, _id: chatId });
   if (!chat) {
     throw notFound();
   }
 
-  // Add user's message to chat
+  // Save user message
   chat.messages.push({
     role: "user",
     content: prompt,
     timestamp: Date.now(),
-    isImage: false,
   });
 
-  // Send message to AI and get reply
-  const response = await openai.chat.completions.create({
-    model: "gemini-2.0-flash",
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
+  // Gemini model (TEXT ONLY)
+  const model = genAI.getGenerativeModel({
+    // model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
   });
+
+  // Generate text response
+  const result = await model.generateContent(prompt);
+  const text = result.response.text();
 
   const reply = {
-    ...response.choices[0].message,
+    role: "assistant",
+    content: text,
     timestamp: Date.now(),
-    isImage: false,
   };
 
-  // Save AI reply in the chat
+  // Save AI reply
   chat.messages.push(reply);
   await chat.save();
 

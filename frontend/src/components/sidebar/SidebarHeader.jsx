@@ -23,7 +23,7 @@ const SidebarHeader = ({ searchTerm, setSearchTerm, onCreateChat }) => {
       {/* Branding / Logo Section */}
       <div className="flex items-center justify-center my-6">
         <img src="./vite.png" alt="App Logo" className="w-8 h-8" />
-        <h2 className="text-2xl font-bold ml-2">SmartGPT</h2>
+        <h2 className="text-2xl font-bold ml-2">Chatbot</h2>
       </div>
 
       {/* Add New Chat Button */}

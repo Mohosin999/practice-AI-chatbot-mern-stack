@@ -132,8 +132,6 @@ export const createImage = createAsyncThunk(
       const accessToken = localStorage.getItem("accessToken");
       if (!accessToken)
         return rejectWithValue("No authentication accessToken found");
-      console.log("imageData", imageData);
-      console.log("accessToken", accessToken);
 
       const res = await api.post(
         `${import.meta.env.VITE_BASE_URL}/images`,
@@ -191,7 +189,26 @@ const chatSlice = createSlice({
         ? [action.payload, ...state.allChats.data]
         : [action.payload];
     },
+
+    // Add temporary message (user or assistant placeholder)
+    addTempMessage: (state, action) => {
+      if (!state.currentChat?.data?.messages)
+        state.currentChat.data.messages = [];
+      state.currentChat.data.messages.push(action.payload);
+    },
+
+    // Replace temporary assistant message with final AI response
+    replaceTempMessage: (state, action) => {
+      if (!state.currentChat?.data?.messages) return;
+      const index = state.currentChat.data.messages.findIndex(
+        (msg) => msg.isTemp === true && msg.role === "assistant"
+      );
+      if (index !== -1) {
+        state.currentChat.data.messages[index] = action.payload;
+      }
+    },
   },
+
   extraReducers: (builder) => {
     builder
       // Create chat
@@ -208,6 +225,7 @@ const chatSlice = createSlice({
         state.isCreating = false;
         state.error = action.payload;
       })
+
       // Get all chats
       .addCase(getAllChats.pending, (state) => {
         state.isLoading = true;
@@ -222,6 +240,7 @@ const chatSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+
       // Get chat by ID
       .addCase(getChatById.pending, (state) => {
         state.isLoading = true;
@@ -236,6 +255,7 @@ const chatSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+
       // Delete chat by ID
       .addCase(deleteChatById.pending, (state) => {
         state.isDeleting = true;
@@ -256,6 +276,7 @@ const chatSlice = createSlice({
         state.isDeleting = false;
         state.error = action.payload;
       })
+
       // Create message
       .addCase(createMessage.pending, (state) => {
         state.isGenerating = true;
@@ -263,13 +284,16 @@ const chatSlice = createSlice({
       })
       .addCase(createMessage.fulfilled, (state, action) => {
         state.isGenerating = false;
-        state.currentChat?.data?.messages.push(action.payload);
+        if (!state.currentChat?.data?.messages)
+          state.currentChat.data.messages = [];
+        state.currentChat.data.messages.push(action.payload);
         state.error = null;
       })
       .addCase(createMessage.rejected, (state, action) => {
         state.isGenerating = false;
         state.error = action.payload;
       })
+
       // Create image
       .addCase(createImage.pending, (state) => {
         state.isGenerating = true;
@@ -277,7 +301,9 @@ const chatSlice = createSlice({
       })
       .addCase(createImage.fulfilled, (state, action) => {
         state.isGenerating = false;
-        state.currentChat?.data?.messages.push(action.payload);
+        if (!state.currentChat?.data?.messages)
+          state.currentChat.data.messages = [];
+        state.currentChat.data.messages.push(action.payload);
         state.error = null;
       })
       .addCase(createImage.rejected, (state, action) => {
@@ -287,5 +313,11 @@ const chatSlice = createSlice({
   },
 });
 
-export const { updateChatName, addChatToAllChats } = chatSlice.actions;
+export const {
+  updateChatName,
+  addChatToAllChats,
+  addTempMessage,
+  replaceTempMessage,
+} = chatSlice.actions;
+
 export default chatSlice.reducer;

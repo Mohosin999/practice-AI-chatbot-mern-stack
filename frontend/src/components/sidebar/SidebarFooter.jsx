@@ -38,12 +38,6 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
   return (
     <div className="flex flex-col gap-2 border-t border-gray-700">
       {/* Theme switch */}
-      {/* <div className="flex items-center justify-between mt-2">
-        <span className="text-sm font-semibold text-[#48A4FF]">
-          {theme === "light" ? "Dark Theme" : "Light Theme"}
-        </span>
-        <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
-      </div> */}
       <div className="flex items-center justify-between mt-2 p-2 bg-gray-800 dark:bg-gray-700 rounded-lg shadow-sm transition-colors duration-300">
         <span
           className="text-sm font-semibold text-[#48A4FF] transition-all duration-300 ease-in-out transform"
@@ -56,7 +50,11 @@ const SidebarFooter = ({ token, onLogout, onLogin }) => {
         >
           {theme === "light" ? "Dark Theme" : "Light Theme"}
         </span>
-        <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
+        <Switch
+          checked={theme === "dark"}
+          onCheckedChange={toggleTheme}
+          className="cursor-pointer"
+        />
       </div>
 
       {/* Divider */}

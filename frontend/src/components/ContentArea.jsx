@@ -8,34 +8,10 @@ import {
   getChatById,
   updateChatName,
   addChatToAllChats,
-  createImage,
+  addTempMessage,
+  replaceTempMessage,
 } from "@/features/chat/chatSlice";
-import toast from "react-hot-toast";
-import Loader from "./Loader";
 
-/**
- * ContentArea Component
- * ---------------------
- * This component represents the main chat area of the application. It handles:
- * 1. Displaying messages of the current chat or a placeholder if no chat exists.
- * 2. Automatic scrolling to the bottom when new messages or images load.
- * 3. Focusing the chat input when appropriate.
- * 4. Sending messages and image prompts, including:
- *    - Creating a new chat if none exists
- *    - Sending a text message or generating an image via AI
- *    - Updating chat titles based on the first message
- * 5. Showing a full-screen loader when AI is generating a response.
- *
- * Features:
- * - Uses refs for smooth scrolling and focusing the input.
- * - Uses Redux for chat state management.
- * - Handles token validation and redirects if needed.
- *
- * Props: None (component relies on Redux state)
- *
- * Example Usage:
- * <ContentArea />
- */
 const ContentArea = () => {
   const { currentChat, isGenerating } = useSelector((state) => state.chat);
   const messagesEndRef = useRef(null);
@@ -44,13 +20,11 @@ const ContentArea = () => {
   const dispatch = useDispatch();
 
   const accessToken = localStorage.getItem("accessToken");
-  const refreshToken = localStorage.getItem("refreshToken");
 
   /**
-   * useEffect - Auto-scroll chat container
-   * --------------------------------------
-   * Scrolls to the bottom whenever the current chat messages change.
-   * Waits for all images to load before scrolling to ensure smooth UX.
+   * ----------------------------------------
+   * Scroll to bottom when messages change
+   * ----------------------------------------
    */
   useEffect(() => {
     if (!chatContainerRef.current) return;
@@ -85,12 +59,9 @@ const ContentArea = () => {
   }, [currentChat?.data?.messages]);
 
   /**
-   * useEffect - Focus chat input
-   * -----------------------------
-   * Automatically focuses the chat input when:
-   * - A token exists
-   * - Chat messages are updated
-   * - No AI generation is in progress
+   * ------------------------------------------
+   * Focus on input when new message is added
+   * ------------------------------------------
    */
   useEffect(() => {
     if (!accessToken) return;
@@ -100,69 +71,79 @@ const ContentArea = () => {
   }, [accessToken, currentChat?.data?.messages, isGenerating]);
 
   /**
-   * Send message or image prompt
-   * -----------------------------
+   * ------------------------------------------
+   * Send message prompt
+   * ------------------------------------------
    * Handles:
    * - Creating a new chat if none exists
    * - Sending text messages
    * - Generating AI images
-   * - Updating the chat title based on the first message
    *
    * @param {string} text - Text input from user
-   * @param {boolean} isImage - Whether the input is an image prompt
    */
-  const handleSend = async (text, isImage) => {
-    if (!accessToken) return;
+  const handleSend = async (text) => {
+    if (!accessToken || !text.trim()) return;
 
     let currentChatId = currentChat?.data?.id;
 
-    // Create a new chat if none exists
     if (!currentChatId) {
       const res = await dispatch(createChat({}));
-      if (res.meta.requestStatus === "fulfilled") {
-        currentChatId = res.payload.data.id;
-        dispatch(addChatToAllChats(res.payload.data));
-      }
+
+      if (res.meta.requestStatus !== "fulfilled") return;
+
+      currentChatId = res.payload.data.id;
+      dispatch(addChatToAllChats(res.payload.data));
+
+      await dispatch(getChatById(currentChatId));
     }
 
-    // Generate AI image
-    if (isImage) {
-      const imageRes = await dispatch(
-        createImage({
-          chatId: currentChatId,
-          prompt: text.trim(),
-          isPublished: false,
+    // Instantly add user message
+    dispatch(
+      addTempMessage({
+        id: Date.now(),
+        role: "user",
+        content: text,
+      })
+    );
+
+    // Add typing indicator (animated ...)
+    dispatch(
+      addTempMessage({
+        id: "typing-indicator",
+        role: "assistant",
+        isTyping: true,
+      })
+    );
+
+    const messageRes = await dispatch(
+      createMessage({ prompt: text.trim(), chatId: currentChatId })
+    );
+
+    if (messageRes.meta.requestStatus === "fulfilled") {
+      const finalMessage = messageRes.payload.data;
+
+      // Replace typing indicator with real response
+      dispatch(
+        replaceTempMessage({
+          ...finalMessage,
+          isTyping: false,
         })
       );
 
-      if (imageRes.meta.requestStatus === "fulfilled") {
-        await dispatch(getChatById(currentChatId));
-      } else {
-        toast.error("Limit reached. Please try again later.");
-      }
-    }
-    // Send text message
-    else {
-      const messageRes = await dispatch(
-        createMessage({ prompt: text.trim(), chatId: currentChatId })
+      // Update chat name (first message only)
+      const chatRes = await dispatch(getChatById(currentChatId));
+      const firstMessageText =
+        chatRes.payload?.data?.messages?.[0]?.content
+          ?.split(" ")
+          .splice(0, 5)
+          .join(" ") || "Untitled Chat";
+
+      dispatch(
+        updateChatName({
+          chatId: currentChatId,
+          chatName: firstMessageText,
+        })
       );
-
-      if (messageRes.meta.requestStatus === "fulfilled") {
-        const chatRes = await dispatch(getChatById(currentChatId));
-
-        const firstMessageText =
-          chatRes.payload?.data?.messages?.[0]?.content
-            ?.split(" ")
-            .splice(0, 4)
-            .join(" ") || "Untitled Chat";
-
-        dispatch(
-          updateChatName({
-            chatId: currentChatId,
-            chatName: firstMessageText,
-          })
-        );
-      }
     }
 
     chatInputRef.current?.focus();
@@ -205,11 +186,6 @@ const ContentArea = () => {
       <div className="w-full md:max-w-2xl xl:max-w-3xl mx-auto">
         <ChatInput ref={chatInputRef} onSend={handleSend} />
       </div>
-
-      {/* Loader overlay while AI is generating */}
-      {isGenerating && refreshToken && (
-        <Loader title="Generating full response..." />
-      )}
     </div>
   );
 };

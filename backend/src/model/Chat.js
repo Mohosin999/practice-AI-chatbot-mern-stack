@@ -7,8 +7,6 @@ const chatSchema = new Schema(
     name: { type: String, default: "New Chat" },
     messages: [
       {
-        isImage: { type: Boolean, required: true },
-        isPublished: { type: Boolean, default: false },
         role: { type: String, required: true },
         content: { type: String, required: true },
         timestamp: { type: Number, required: true },

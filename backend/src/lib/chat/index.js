@@ -1,6 +1,5 @@
 const Chat = require("../../model/Chat");
 const { notFound } = require("../../utils/error");
-const openai = require("../../config/openai");
 
 /**
  * Creates a new chat for a user.

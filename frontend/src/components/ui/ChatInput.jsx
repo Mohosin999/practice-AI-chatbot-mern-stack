@@ -20,10 +20,9 @@ import { FaCircleArrowRight } from "react-icons/fa6";
 
  */
 const ChatInput = forwardRef(({ onSend }, ref) => {
-  const [value, setValue] = useState(""); // Current input value
-  const [isImage, setIsImage] = useState(false); // Whether to send message as an image
-  const textareaRef = useRef(null); // Ref to the textarea DOM element
-  const token = localStorage.getItem("accessToken") || ""; // Auth token for enabling input
+  const [value, setValue] = useState("");
+  const textareaRef = useRef(null);
+  const token = localStorage.getItem("accessToken") || "";
 
   /**
    * Adjust textarea height based on content to auto-expand
@@ -49,11 +48,10 @@ const ChatInput = forwardRef(({ onSend }, ref) => {
   const sendMessage = () => {
     const text = value.trim();
     if (!text) return;
-    if (typeof onSend === "function") onSend(text, isImage);
+    if (typeof onSend === "function") onSend(text);
 
     // Reset state
     setValue("");
-    setIsImage(false);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
@@ -77,29 +75,6 @@ const ChatInput = forwardRef(({ onSend }, ref) => {
 
   return (
     <div className="w-full px-4 md:px-0 flex flex-col items-center">
-      {/* Checkbox area (fade in/out instead of shifting layout) */}
-      <div
-        className={`h-6 flex items-center justify-center space-x-2 text-sm transition-all duration-300 ${
-          value.trim().length > 0 && token
-            ? "opacity-100 translate-y-0"
-            : "opacity-0 -translate-y-2 pointer-events-none"
-        }`}
-      >
-        <input
-          type="checkbox"
-          id="generateImage"
-          checked={isImage}
-          onChange={(e) => setIsImage(e.target.checked)}
-          className="cursor-pointer"
-        />
-        <label
-          htmlFor="generateImage"
-          className="cursor-pointer text-gray-600 dark:text-gray-400"
-        >
-          Generate as Image
-        </label>
-      </div>
-
       <div className="relative w-full rounded-xl border border-gray-300 bg-white dark:bg-[#303030] dark:border-[#303030] shadow-md group">
         {/* Textarea for user input */}
         <textarea
