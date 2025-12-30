@@ -12,7 +12,7 @@ const Message = ({ msg }) => {
   if (msg.isTyping) {
     return (
       <div className="flex justify-start">
-        <div className="bg-gray-100 dark:bg-[#2c2c2c] p-3 rounded-lg rounded-bl-none">
+        <div className="p-3 rounded-lg rounded-bl-none">
           <TypingIndicator />
         </div>
       </div>
